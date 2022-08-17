@@ -26,6 +26,8 @@ import dash_bootstrap_components as dbc
 import base64  #imagecreation for wordcloud in dash app
 from io import BytesIO #handling the ping image without saving it
 
+#insert the keys you obtained from developer.twitter when creating
+#your app.
 
 client = tweepy.Client( bearer_token=bearer_token, 
                         consumer_key=consumer_key, 
@@ -65,12 +67,13 @@ mytweets_flat = pd.DataFrame(mytweets_arr_limitless, columns=['text'])
 
 #transformation
 mytweets_flat['text'] = mytweets_flat['text'].astype(str).str.lower()
+
 #remove all @, replies get the wrong language and why no other users in the
 #wordcloud
 
 mytweets_flat['text'] = mytweets_flat.apply(lambda x: x.str.replace('@',''))
 
-#Detect language, since I now have installed googletrans 3.0.1a I could
+#Detect language, since I now have installed non-buggy googletrans 3.0.1a I could
 #use googletrans too.
 
 mytweets_flat["language"] = None
@@ -86,7 +89,7 @@ for index, row in mytweets_flat.iterrows():
     row['language'] = detect_language
     
  
-#we only pick dutch and english language  
+#we only pick dutch and english tweets
 mytweets_analyze = mytweets_flat.loc[mytweets_flat.language.isin(["nl", "en"]) ]
 
 
@@ -108,7 +111,9 @@ for index, row in mytweets_analyze.iterrows():
         translation = translator.translate(row["text"], src='nl')
         row["text"]=translation.text
 
-#create a csv in case that I exceed a limit or two @twitter or @google.    
+#create a csv in case that I exceed a limit or two @twitter or @google.
+#the csv can be used instead of dynamically getting recent tweets
+    
 mytweets_analyze.to_csv("mytweets_analyze_translated.csv")   
 
     
@@ -128,7 +133,7 @@ nltk.download('stopwords')
 from nltk.corpus import stopwords
 
 # Make a list of english and dutch stopwords, I could now remove dutch.
-# because I've translated them.
+# because google has translated those texts into english
 
 stopwords = nltk.corpus.stopwords.words("english")
 stopwords_nl = nltk.corpus.stopwords.words("dutch")
@@ -221,10 +226,7 @@ print(mytweets_analyze.loc[mytweets_analyze['compound'].idxmin()].values)
 
 ########################OUTPUT###########################
 
-#def line_distinct_companies():
-#    alldata = distinct_companies_year.copy(deep=True)
-#    line_distinct_companies  = px.scatter(alldata, x="Date", y="Company", title=None,trendline="ols",height=300, template="plotly_dark")                              
-#    return line_distinct_companies 
+
 
 def histogram_sentiment():
     #df = px.data.tips()
@@ -237,7 +239,9 @@ def histogram_language():
     return histogram_language
 
 def plot_wordcloud():
-
+    #the callback function uses plot_wordcloud() to generate the actual 
+    #graph and save it as a png. The png is displayed on the dashboard.
+    
     wc = WordCloud(width=600, 
                          height=400, 
                          random_state=2, 
@@ -247,7 +251,7 @@ def plot_wordcloud():
 #DASH LAYOUT
 
 app=dash.Dash()
-#load css bootstrap 5:
+#load Cyborg and fontawesome
 app = dash.Dash(external_stylesheets=[
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
      dbc.themes.CYBORG
